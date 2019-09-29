@@ -1,0 +1,11 @@
+{
+  "name": "botsimulatorcli",
+  "version": "1.0.0",
+  "description": "PT. AXIATA DIGITAL SERVICES INDONESIA Toy Roy Robot Simulator task",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "M. Sigit Prasetyo",
+  "license": "ISC"
+}
