@@ -11,8 +11,8 @@ const width = 5;
 const height = 5;
 const turnOrder = ["NORTH", "EAST", "SOUTH", "WEST"];
 
-let curX = 0;
-let curY = 0;
+let curX = 2;
+let curY = 2;
 let curFace = "NORTH";
 
 const Dimensions = () => {
@@ -35,7 +35,6 @@ const turnConditions = (command) => {
         return index === curFace
     })
 
-
     switch (command) {
         case 'LEFT':
             id -= 1;
@@ -51,12 +50,12 @@ const turnConditions = (command) => {
             break;
     }
     curFace = turnOrder[id];
+    return curFace
 }
 
 const turnCmd = (command) => {
     turnConditions(command)
     console.log("TURN " + command + ": the bot moves to \nX: " + chalk.green.bold(curX) + ",\nY: " + chalk.green.bold(curY) + "\nfacing to the " + chalk.green.bold(curFace) + ", please input another command:");
-
 }
 
 const moveConditions = (face) => {
@@ -91,17 +90,18 @@ const moveConditions = (face) => {
     })
     if (validatePlace == null) {
         console.log(chalk.red.bold("Movement is invalid"));
+        return [curX, curY]
     } else {
         curX = posX
         curY = posY
     }
+    return [curX, curY]
 }
 
 
 const moveCmd = () => {
     moveConditions(curFace)
     console.log("MOVE: the bot moves to \nX: " + chalk.green.bold(curX) + ", \nY: " + chalk.green.bold(curY) + "\nfacing to the " + chalk.green.bold(curFace) + ", please input another command:");
-
 }
 
 const reportCmd = () => {
@@ -145,7 +145,7 @@ const processInput = (data) => {
             console.log(chalk.red.bold("Command not valid, the valid command is <MOVE> <RIGHT> <LEFT> <REPORT>"));
             break;
     }
-    promptInput()
+    return promptInput()
 }
 
 const promptInput = () => {
@@ -154,16 +154,21 @@ const promptInput = () => {
 
         readline.resume()
     })
+    return false;
 
 }
 
 const placeCmd = (arg) => {
-    curX = arg[1];
-    curY = arg[2];
-    curFace = arg[3];
-    console.log("the bot is placed on: \nX: " + chalk.green.bold(curX) + ", \nY: " + chalk.green.bold(curY) + "\nfacing to the " + chalk.green.bold(curFace) + ", please input another command:");
-
-    promptInput();
+    try {
+        curX = arg[1];
+        curY = arg[2];
+        curFace = arg[3];
+        console.log("the bot is placed on: \nX: " + chalk.green.bold(curX) + ", \nY: " + chalk.green.bold(curY) + "\nfacing to the " + chalk.green.bold(curFace) + ", please input another command:");
+        return true;
+    } catch (error) {
+        console.log('error on placeCmd', error)
+        return false;
+    }
 
 }
 
@@ -175,17 +180,14 @@ const validateArg = (arg) => {
     // X not less than 0
     if (!Number.isInteger(parseInt(arg[1]))) {
         console.log(chalk.red.bold("validation failed on X value, 1"), typeof arg[1], width);
-        process.exit()
         return false
     }
     if (arg[1] > width) {
         console.log(chalk.red.bold("validation failed on X value, 2"), typeof arg[1], width);
-        process.exit()
         return false
     }
     if (arg[1] < 0) {
         console.log(chalk.red.bold("validation failed on X value, 2"), typeof arg[1], width);
-        process.exit()
         return false
     }
 
@@ -195,17 +197,14 @@ const validateArg = (arg) => {
     // Y not less than 0
     if (!Number.isInteger(parseInt(arg[2]))) {
         console.log(chalk.red.bold("validation failed on Y value, 1"), typeof arg[2], width);
-        process.exit()
         return false
     }
     if (arg[2] > width) {
         console.log(chalk.red.bold("validation failed on Y value, 2"), typeof arg[2], width);
-        process.exit()
         return false
     }
     if (arg[2] < 0) {
         console.log(chalk.red.bold("validation failed on Y value, 2"), typeof arg[2], width);
-        process.exit()
         return false
     }
 
@@ -214,12 +213,12 @@ const validateArg = (arg) => {
     // the string given is one of NORTH EAST SOUTH and WEST
     if (typeof arg[3] !== 'string') {
         console.log(chalk.red.bold("Validation failed on FACE value, 1"), typeof arg[3]);
-        process.exit()
+        return false
     }
 
     if (!turnOrder.includes(arg[3])) {
         console.log(chalk.red.bold("validation failed on FACE value, 2"), arg[3]);
-        process.exit()
+        return false
     }
 
     // console.log("validation passed', arg);
@@ -231,11 +230,13 @@ const processArg = (arg) => {
         // First, validate given argument
         let validate = validateArg(arg);
         if (validate) {
-            placeCmd(arg);
+            // return validate;
+            return placeCmd(arg);
         }
+        return false
     } else {
         console.log('Please place bot position, by entering command <PLACE X Y FACE>');
-        process.exit()
+        return false
     }
 }
 
@@ -244,7 +245,16 @@ const run = () => {
     // get first PLACE argument
     let arrArg = process.argv;
     arrArg.splice(0, 2);
-    processArg(arrArg);
+    if (processArg(arrArg)) {
+        return promptInput();
+    } else {
+        setTimeout((function () {
+            process.exit()
+            return false;
+        }), 1000);
+    }
 };
 
 run();
+
+module.exports = { processArg, validateArg, moveConditions, turnConditions }
